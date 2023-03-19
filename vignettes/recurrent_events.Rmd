@@ -1,0 +1,195 @@
+---
+title: "Recurrent Event Analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Recurrent Event Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(lzrs)
+library(survival)
+library(card)
+```
+
+Recurrent events are an extension of general survival models. These functions are mostly well captured within the `{survival}` package, except for the data preparation. This will walk through the approach in `R` using using a sample data set from the `{card}` package.
+
+First we will set up the data. There are several events, and several event types, including a final censoring event. This is in a relatively standard data format, with each row fully describing each subject and the corresponding events.
+
+```{r}
+data("stress")
+head(stress)
+
+# For short cuts
+events <- c(paste0("head_ache_date_", 1:3), paste0("heart_ache_date_", 1:3))
+```
+
+# Traditional model
+
+This is a traditional survival analysis. It requires almost no formating, but is available for thoroughness.
+
+```{r}
+trad_data <-
+  recur(
+    stress,
+    model_type = "trad",
+    id = "id",
+    left = "start",
+    right = "stop",
+    censor = "death"
+  )
+
+head(trad_data)
+
+# Now add back a covariate for analysis
+df <- merge(trad_data, stress[c("id", "broken_heart")], by = "id", all.x = TRUE)
+
+coxph(Surv(stop, status) ~ broken_heart, data = df) |>
+  summary()
+```
+
+# Andersen-Gill model
+
+The Andersen-Gill model is a generalization of the Cox model. There is a common baseline hazard for all events, and assumes constant hazard throughout time. It highlights the estimate on the intensity of the reucrrent events.
+
+```{r}
+ag_data <-
+  recur(
+    stress,
+    model_type = "ag",
+    id = "id",
+    left = "start",
+    right = "stop",
+    censor = "death",
+    event_dates = events
+  )
+
+head(ag_data)
+```
+
+As you can see, the number of rows has increased, as there are multiple events now for each subject. Of note, the events are given equal weight.
+
+```{r}
+# Now add back a covariate for analysis
+df <- merge(ag_data, stress[c("id", "broken_heart")], by = "id", all.x = TRUE)
+
+coxph(
+  Surv(start, stop, status) ~ broken_heart,
+  method = "breslow",
+  data = df
+) |>
+  summary()
+```
+
+# Wei-Lin-Weissfield or marginal model
+
+This model does not specifiy dependence structures amongst recurrent event times within a subject. There is also not a baseline hazard assumption. However, the max number of events are specified in advance. We tend to use this when the dependence structure is complex or unknown (and may not matter). 
+
+```{r}
+marg_data <-
+  recur(
+    stress,
+    model_type = "marginal",
+    id = "id",
+    left = "start",
+    right = "stop",
+    censor = "death",
+    event_dates = events
+  )
+
+head(marg_data)
+
+unique(marg_data$strata)
+```
+
+There are strata now for recurring events.
+
+```{r}
+# Now add back a covariate for analysis
+df <- merge(marg_data, stress[c("id", "broken_heart")], by = "id", all.x = TRUE)
+
+coxph(
+  Surv(start, stop, status) ~ broken_heart + cluster(id),
+  robust = TRUE,
+  method = "breslow",
+  data = df
+) |>
+  summary()
+```
+
+# Prentice, Williams, Peterson (PWP) model
+
+The PWP orders events into strata, and counts all subjects at being risk for the first event. But, it only includes risk for subjects that have already had an event for subsequent strata. The two methods are to use the total time or the time between events as the measure of time.
+
+```{r}
+total_data <-
+  recur(
+    stress,
+    model_type = "pwptt",
+    id = "id",
+    left = "start",
+    right = "stop",
+    censor = "death",
+    event_dates = events
+  )
+
+tail(total_data)
+
+gap_data <-
+  recur(
+    stress,
+    model_type = "pwpgt",
+    id = "id",
+    left = "start",
+    right = "stop",
+    censor = "death",
+    event_dates = events
+  )
+
+tail(gap_data)
+```
+
+The strata for events can effect the start time for risk for an event in this model type. This show cases the findings with total time as part of the risk.
+
+```{r}
+# Now add back a covariate for analysis
+df <- merge(total_data, stress[c("id", "broken_heart")], by = "id", all.x = TRUE)
+
+coxph(
+  Surv(start, stop, status) ~ broken_heart + cluster(id) + strata(strata),
+  robust = TRUE,
+  method = "breslow",
+  data = df
+) |>
+  summary()
+```
+
+Here we use gap time.
+
+```{r}
+# Now add back a covariate for analysis
+df <- merge(gap_data, stress[c("id", "broken_heart")], by = "id", all.x = TRUE)
+
+coxph(
+  Surv(start, stop, status) ~ broken_heart + cluster(id) + strata(strata),
+  robust = TRUE,
+  method = "breslow",
+  data = df
+) |>
+  summary()
+```
+
+# Additional methods
+
+- Multi-state models
+- Frailty models
+
+Will expand this in the future.

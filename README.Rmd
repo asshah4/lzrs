@@ -20,3 +20,4 @@ knitr::opts_chunk$set(
 [![Codecov test coverage](https://codecov.io/gh/asshah4/lzrs/branch/main/graph/badge.svg)](https://app.codecov.io/gh/asshah4/lzrs?branch=main)
 <!-- badges: end -->
 
+The goal of the `lzrs` package is to help with the analysis of recurrent events.
