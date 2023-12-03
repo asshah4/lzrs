@@ -1,4 +1,41 @@
-url: ~
+url: https://asshah4.github.io/lzrs/
+
+development:
+  mode: auto
+
 template:
   bootstrap: 5
+  bootswatch: flatly
+  theme: solarized-light
+  bslib:
+    primary: "#0a3d72"
+    secondary: "#008083"
+    success: "#faab36"
+    info: "#249ea0"
+    warnings: "#9b2226"
+    danger: "#f78104"
+    light: "#e9d8a6"
+    dark: "#001219"
 
+destination: docs
+
+home:
+  title: Evaluating cardiac electrophysiological signals
+  description: Electrophysiological signal and waveform tools
+  sidebar:
+    structure: [links, license, community, citation, authors, dev]
+
+navbar:
+  structure:
+    left:  [home, reference, articles, tutorials, news]
+    right: [github]
+  components:
+    home:
+      icon: fas fa-home fa-lg
+      href: https://asshah4.github.io/
+    reference:
+      text: Reference
+      href: reference/index.html
+    github:
+      icon: fab fa-github fa-lg
+      href: https://github.com/asshah4/lzrs/

@@ -46,3 +46,8 @@ test_that("recur() has appropriate outputs based on model type", {
 
 })
 
+
+test_that("recur() can organize data appropriately", {
+
+
+})

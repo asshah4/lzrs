@@ -222,6 +222,7 @@ recur <- function(data,
 }
 
 #' @description Switch method for model types
+#' @keywords internal
 #' @noRd
 recur_model_type <- function(tbl, model_type) {
 
