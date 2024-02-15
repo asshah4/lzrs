@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/reference/test_package.html#special-files
 
 library(testthat)
-library(taurus)
+library(rcr)
 
-test_check("taurus")
+test_check("rcr")

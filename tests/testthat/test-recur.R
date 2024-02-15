@@ -1,7 +1,8 @@
-# Skip for run time
-skip_on_cran()
 
 test_that("recur() has appropriate outputs based on model type", {
+
+	# Skip for run time
+	skip_on_cran()
 
 	# Setup variables
 	library(card)
